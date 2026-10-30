@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "app.olaunchercf"
+        applicationId "app.luncher"
         minSdkVersion 23
         targetSdkVersion 33
         versionCode 34
@@ -34,25 +34,31 @@ android {
         kotlinCompilerExtensionVersion '1.5.13'
     }
 
-/*     def releaseFile = rootProject.file("./release.properties")
- *     def properties = new Properties()
- *     properties.load(new FileInputStream(releaseFile))
- *
- *     signingConfigs {
- *         release {
- *             storeFile file(properties['storeFile'])
- *             storePassword properties['storePassword']
- *             keyAlias properties['keyAlias']
- *             keyPassword properties['keyPassword']
- *         }
- *     } */
+    def releaseFile = rootProject.file("release.properties")
+    def properties = new Properties()
+    if (releaseFile.exists()) {
+        releaseFile.withInputStream { properties.load(it) }
+    }
+
+    signingConfigs {
+        release {
+            if (releaseFile.exists()) {
+                storeFile rootProject.file(properties['storeFile'])
+                storePassword properties['storePassword']
+                keyAlias properties['keyAlias']
+                keyPassword properties['keyPassword']
+            }
+        }
+    }
 
     buildTypes {
         release {
             debuggable false
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            /* signingConfig signingConfigs.release */
+            if (releaseFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
         debug {
             debuggable true
