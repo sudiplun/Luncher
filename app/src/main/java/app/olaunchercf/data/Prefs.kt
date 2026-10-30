@@ -5,8 +5,8 @@ import android.content.SharedPreferences
 import android.os.UserHandle
 import android.util.Log
 import app.olaunchercf.helper.getUserHandleFromString
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import org.json.JSONArray
+import org.json.JSONObject
 
 private const val APP_LANGUAGE = "app_language"
 private const val PREFS_FILENAME = "app.olauncher"
@@ -60,22 +60,35 @@ class Prefs(val context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, 0)
 
     fun saveToString(): String {
-        val all: HashMap<String, Any?> = HashMap(prefs.all)
-        return Gson().toJson(all)
+        val json = JSONObject()
+        for ((key, value) in prefs.all) {
+            when (value) {
+                null -> continue
+                is Set<*> -> {
+                    val array = JSONArray()
+                    value.forEach { array.put(it) }
+                    json.put(key, array)
+                }
+                else -> json.put(key, value)
+            }
+        }
+        return json.toString()
     }
 
     fun loadFromString(json: String) {
         val editor = prefs.edit()
-        val all: HashMap<String, Any?> = Gson().fromJson(json, object : TypeToken<HashMap<String, Any?>>() {}.type)
-        for ((key, value) in all) {
-            when (value) {
+        val obj = JSONObject(json)
+        for (key in obj.keys()) {
+            when (val value = obj.get(key)) {
                 is String -> editor.putString(key, value)
                 is Boolean -> editor.putBoolean(key, value)
                 is Int -> editor.putInt(key, value)
+                is Long -> editor.putInt(key, value.toInt()) // we store everything as int
                 is Double -> editor.putInt(key, value.toInt()) // we store everything as int
                 is Float -> editor.putInt(key, value.toInt())
-                is MutableSet<*> -> {
-                    val list = value.filterIsInstance<String>().toSet()
+                is JSONArray -> {
+                    val list = mutableSetOf<String>()
+                    for (i in 0 until value.length()) list.add(value.getString(i))
                     editor.putStringSet(key, list)
                 }
                 else ->  { Log.d("backup error", "$value") }

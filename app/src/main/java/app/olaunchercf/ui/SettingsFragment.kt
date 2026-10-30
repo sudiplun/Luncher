@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -365,13 +365,12 @@ class SettingsFragment : Fragment() {
             )
 
             // version number
-            Text(
+            BasicText(
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(10.dp, 5.dp),
                 text = "Version: ${requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName}",
-
-                color = Color.DarkGray
+                style = androidx.compose.ui.text.TextStyle(color = Color.DarkGray)
             )
         }
     }

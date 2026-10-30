@@ -1,6 +1,5 @@
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.ZeroCornerSize
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -101,9 +100,7 @@ fun SettingsTheme(
         LocalReplacementShapes provides replacementShapes,
         LocalReplacementColor provides replacementColor,
     ) {
-        MaterialTheme(
-            content = content
-        )
+        content()
     }
 }
 

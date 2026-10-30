@@ -95,7 +95,7 @@ class AppDrawerFragment : Fragment() {
             appRenameListener()
         )
 
-        val searchTextView = binding.search.findViewById<TextView>(R.id.search_src_text)
+        val searchTextView = binding.search.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
         if (searchTextView != null) searchTextView.gravity = gravity
 
         initViewModel(flag, viewModel, appAdapter)
@@ -158,7 +158,7 @@ class AppDrawerFragment : Fragment() {
     private fun View.showKeyboard() {
         if (!Prefs(requireContext()).autoShowKeyboard) return
 
-        val searchTextView = binding.search.findViewById<TextView>(R.id.search_src_text)
+        val searchTextView = binding.search.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
         searchTextView.requestFocus()
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         searchTextView.postDelayed(Runnable {

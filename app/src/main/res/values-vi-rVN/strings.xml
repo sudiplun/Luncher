@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Olauncher Clutter Free</string>
+    <string name="app_name">Luncher</string>
     <string name="accessibility_service_name">Dịch vụ hành động OlauncherCF</string>
     <string name="app">Ứng Dụng</string>
     <string name="set_as_default_launcher">Đặt làm trình khởi chạy mặc định</string>

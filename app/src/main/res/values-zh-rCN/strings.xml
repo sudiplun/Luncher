@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Olauncher Clutter Free</string>
+    <string name="app_name">Luncher</string>
     <string name="accessibility_service_name">OlauncherCF 操作服务</string>
     <string name="app">应用</string>
     <string name="set_as_default_launcher">设为默认启动器</string>
