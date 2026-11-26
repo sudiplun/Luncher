@@ -24,6 +24,7 @@ private const val DRAWER_ALIGNMENT = "DRAWER_ALIGNMENT"
 private const val TIME_ALIGNMENT = "TIME_ALIGNMENT"
 private const val STATUS_BAR = "STATUS_BAR"
 private const val SHOW_DATE = "SHOW_DATE"
+private const val DATE_MODE = "DATE_MODE"
 private const val HOME_LOCKED = "HOME_LOCKED"
 private const val SHOW_TIME = "SHOW_TIME"
 private const val SWIPE_DOWN_ACTION = "SWIPE_DOWN_ACTION"
@@ -181,9 +182,31 @@ class Prefs(val context: Context) {
         get() = prefs.getBoolean(SHOW_TIME, true)
         set(value) = prefs.edit().putBoolean(SHOW_TIME, value).apply()
 
-    var showDate: Boolean
-        get() = prefs.getBoolean(SHOW_DATE, true)
-        set(value) = prefs.edit().putBoolean(SHOW_DATE, value).apply()
+    /**
+     * Home screen date mode (`AD`, `BS`, or `Off`).
+     * Fresh installs default to `BS`; legacy `SHOW_DATE` booleans migrate to `AD` (`true`) or `Off` (`false`).
+     */
+    var dateMode: Constants.DateMode
+        get() {
+            if (prefs.contains(DATE_MODE)) {
+                return try {
+                    Constants.DateMode.valueOf(
+                        prefs.getString(DATE_MODE, Constants.DateMode.BS.name).toString()
+                    )
+                } catch (_: Exception) {
+                    Constants.DateMode.BS
+                }
+            }
+            if (prefs.contains(SHOW_DATE)) {
+                return try {
+                    if (prefs.getBoolean(SHOW_DATE, true)) Constants.DateMode.AD else Constants.DateMode.Off
+                } catch (_: Exception) {
+                    Constants.DateMode.BS
+                }
+            }
+            return Constants.DateMode.BS
+        }
+        set(value) = prefs.edit().putString(DATE_MODE, value.name).apply()
 
     var homeLocked: Boolean
         get() = prefs.getBoolean(HOME_LOCKED, false)

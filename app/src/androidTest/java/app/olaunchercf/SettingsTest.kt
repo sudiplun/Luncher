@@ -71,10 +71,19 @@ class SettingsTest {
     }
 
     @Test
-    fun hideDate() {
+    fun dateMode() {
         goToSettings()
         clickOnSetting(composeTestRule.activity.getString(R.string.show_date))
-        assert(!prefs.showDate)
+        composeTestRule.onNode(hasText(getString(R.string.date_ad))).performClick()
+        assert(prefs.dateMode == Constants.DateMode.AD)
+
+        clickOnSetting(composeTestRule.activity.getString(R.string.show_date))
+        composeTestRule.onNode(hasText(getString(R.string.off))).performClick()
+        assert(prefs.dateMode == Constants.DateMode.Off)
+
+        clickOnSetting(composeTestRule.activity.getString(R.string.show_date))
+        composeTestRule.onNode(hasText(getString(R.string.date_bs))).performClick()
+        assert(prefs.dateMode == Constants.DateMode.BS)
     }
 
     @Test
@@ -195,6 +204,7 @@ class SettingsTest {
             homeAppsNum = 10
             homeAlignment = Constants.Gravity.Center
             swipeLeftAction = Constants.Action.OpenQuickSettings
+            dateMode = Constants.DateMode.AD
         }
 
         val string = prefs.saveToString()
@@ -213,6 +223,7 @@ class SettingsTest {
             assert(homeAppsNum == 10)
             assert(homeAlignment == Constants.Gravity.Center)
             assert(swipeLeftAction == Constants.Action.OpenQuickSettings)
+            assert(dateMode == Constants.DateMode.AD)
         }
     }
 

@@ -1,17 +1,12 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 android {
-    compileSdkVersion 33
+    compileSdk 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
     defaultConfig {
@@ -28,10 +23,6 @@ android {
         compose true
         viewBinding = true
         buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion '1.5.13'
     }
 
     def releaseFile = rootProject.file("release.properties")
@@ -73,11 +64,25 @@ android {
         viewBinding = true
     }
 
+    splits {
+        abi {
+            enable true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            universalApk false
+        }
+    }
 
     lint {
         abortOnError false
     }
     namespace 'app.olaunchercf'
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+    }
 }
 
 dependencies {
@@ -101,6 +106,8 @@ dependencies {
     // Compose foundation (UI runtime and layout)
     implementation 'androidx.compose.foundation:foundation:1.2.0'
 
+
+    testImplementation 'junit:junit:4.13.2'
 
     def androidx_test_espresso = "3.5.0"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_test_espresso"

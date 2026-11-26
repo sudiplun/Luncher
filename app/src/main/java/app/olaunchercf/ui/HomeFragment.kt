@@ -5,6 +5,8 @@ import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.Vibrator
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -23,6 +25,7 @@ import app.olaunchercf.R
 import app.olaunchercf.data.AppModel
 import app.olaunchercf.data.Constants.Action
 import app.olaunchercf.data.Constants.AppDrawerFlag
+import app.olaunchercf.data.Constants.DateMode
 import app.olaunchercf.data.Prefs
 import app.olaunchercf.databinding.FragmentHomeBinding
 import app.olaunchercf.helper.*
@@ -40,6 +43,18 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
+    private val dateHandler = Handler(Looper.getMainLooper())
+    private var isStarted = false
+    private val dateRefreshRunnable = object : Runnable {
+        override fun run() {
+            if (_binding == null || !isStarted) return
+            val mode = viewModel.dateMode.value ?: prefs.dateMode
+            if (mode == DateMode.Off) return
+            renderDateText(mode)
+            scheduleNextDateRefresh()
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -74,11 +89,24 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     override fun onStart() {
         super.onStart()
+        isStarted = true
         if (prefs.showStatusBar) showStatusBar(requireActivity()) else hideStatusBar(requireActivity())
 
         binding.clock.textSize = prefs.textSize * 2.5f
         binding.date.textSize = prefs.textSize.toFloat()
+        updateDateDisplay(viewModel.dateMode.value ?: prefs.dateMode)
+    }
 
+    override fun onStop() {
+        isStarted = false
+        dateHandler.removeCallbacks(dateRefreshRunnable)
+        super.onStop()
+    }
+
+    override fun onDestroyView() {
+        dateHandler.removeCallbacks(dateRefreshRunnable)
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onResume() {
@@ -156,10 +184,34 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             showTime.observe(viewLifecycleOwner) {
                 binding.clock.visibility = if (it) View.VISIBLE else View.GONE
             }
-            showDate.observe(viewLifecycleOwner) {
-                binding.date.visibility = if (it) View.VISIBLE else View.GONE
+            dateMode.observe(viewLifecycleOwner) {
+                updateDateDisplay(it)
             }
         }
+    }
+
+    private fun updateDateDisplay(mode: DateMode) {
+        dateHandler.removeCallbacks(dateRefreshRunnable)
+        if (mode == DateMode.Off) {
+            binding.date.visibility = View.GONE
+            return
+        }
+        binding.date.visibility = View.VISIBLE
+        renderDateText(mode)
+        if (isStarted) scheduleNextDateRefresh()
+    }
+
+    private fun renderDateText(mode: DateMode) {
+        binding.date.text = when (mode) {
+            DateMode.AD -> NepaliDate.formatAd()
+            DateMode.BS -> NepaliDate.format()
+            DateMode.Off -> ""
+        }
+    }
+
+    private fun scheduleNextDateRefresh() {
+        val delayMs = 60_000L - (System.currentTimeMillis() % 60_000L)
+        dateHandler.postDelayed(dateRefreshRunnable, delayMs)
     }
 
     private fun homeAppClicked(location: Int) {
