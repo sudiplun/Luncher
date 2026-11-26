@@ -5,7 +5,7 @@ This repository uses GitHub Actions for continuous integration (CI) and release 
 ## Workflows
 
 ### 1. Continuous Integration ([`build.yml`](../.github/workflows/build.yml) & [`validate-gradle-wrapper.yaml`](../.github/workflows/validate-gradle-wrapper.yaml))
-- **Triggers:** `push` and `pull_request` targeting `main`.
+- **Triggers:** `push` and `pull_request` targeting `main` (ignoring `**/*.md` documentation-only changes).
 - **Environment:** `ubuntu-latest`, Temurin JDK `17`, Gradle `9.9.2` via `gradle/actions/setup-gradle@v4`.
 - **Checks executed:**
   1. Gradle wrapper checksum validation (`gradle/actions/wrapper-validation@v4`)
