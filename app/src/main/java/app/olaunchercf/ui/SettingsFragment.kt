@@ -210,12 +210,17 @@ class SettingsFragment : Fragment() {
                             state = remember { mutableStateOf(prefs.showTime) }
                         ) { toggleShowTime() }
                     },
-                    { _, onChange ->
-                        SettingsToggle(
+                    { open, onChange ->
+                        val dateMode = remember { mutableStateOf(prefs.dateMode) }
+                        SettingsItem(
                             title = stringResource(R.string.show_date),
+                            open = open,
                             onChange = onChange,
-                            state = remember { mutableStateOf(prefs.showDate) }
-                        ) { toggleShowDate() }
+                            currentSelection = dateMode,
+                            values = Constants.DateMode.values(),
+                            active = dateMode.value != Constants.DateMode.Off,
+                            onSelect = { mode -> setDateMode(mode) }
+                        )
                     },
                     { _, onChange ->
                         SettingsToggle(
@@ -417,9 +422,9 @@ class SettingsFragment : Fragment() {
         if (showStatusbar) showStatusBar(requireActivity()) else hideStatusBar(requireActivity())
     }
 
-    private fun toggleShowDate() {
-        prefs.showDate = !prefs.showDate
-        viewModel.setShowDate(prefs.showDate)
+    private fun setDateMode(mode: Constants.DateMode) {
+        prefs.dateMode = mode
+        viewModel.setDateMode(mode)
     }
 
     private fun toggleShowTime() {

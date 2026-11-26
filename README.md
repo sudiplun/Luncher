@@ -37,6 +37,7 @@
 ## Contribute
 
 - This app is basically feature complete. However, if you find any bugs, please search for existing issues, and if you don't find any feel free to open a new one.
+- See [CI/CD Setup](docs/CICD.md) for automated build, test, signing secret configuration, and release instructions.
 
 ## Translations:
 

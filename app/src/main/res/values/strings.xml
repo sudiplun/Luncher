@@ -53,6 +53,8 @@
     <string name="rename">Rename</string>
     <string name="show_time">Show time</string>
     <string name="show_date">Show date</string>
+    <string name="date_ad">AD</string>
+    <string name="date_bs">BS</string>
     <string name="lock_home_apps">Lock Apps</string>
     <string name="extend_home_apps_area">Extend clickable area on home apps</string>
     <string name="appearance">Appearance</string>

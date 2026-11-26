@@ -28,7 +28,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val launcherResetFailed = MutableLiveData<Boolean>()
 
     val showTime = MutableLiveData(prefs.showTime)
-    val showDate = MutableLiveData(prefs.showDate)
+    val dateMode = MutableLiveData(prefs.dateMode)
     val clockAlignment = MutableLiveData(prefs.clockAlignment)
     val homeAppsAlignment = MutableLiveData(Pair(prefs.homeAlignment, prefs.homeAlignmentBottom))
     val homeAppsCount = MutableLiveData(prefs.homeAppsNum)
@@ -51,8 +51,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setShowDate(visibility: Boolean) {
-        showDate.value = visibility
+    fun setDateMode(mode: Constants.DateMode) {
+        dateMode.value = mode
     }
 
     fun setShowTime(visibility: Boolean) {

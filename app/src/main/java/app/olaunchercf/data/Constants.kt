@@ -193,4 +193,20 @@ object Constants {
             }
         }
     }
+
+    /** Home screen date display mode. */
+    enum class DateMode: EnumOption {
+        AD,
+        BS,
+        Off;
+
+        @Composable
+        override fun string(): String {
+            return when(this) {
+                AD -> stringResource(R.string.date_ad)
+                BS -> stringResource(R.string.date_bs)
+                Off -> stringResource(R.string.off)
+            }
+        }
+    }
 }
