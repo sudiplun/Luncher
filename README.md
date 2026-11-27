@@ -2,20 +2,20 @@
 
 <p align="center">Minimal, lightweight, and clutter-free Android launcher.</p>
 
-- Download signed per-ABI APKs (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`) from [GitHub Releases](https://github.com/sudiplun/Luncher/releases).
+- Download the signed APK from [GitHub Releases](https://github.com/sudiplun/Luncher/releases).
 - Based on [OlauncherCF](https://github.com/OlauncherCF/OlauncherCF) and [Olauncher](https://github.com/tanujnotes/Olauncher).
 
 ## Features
 
 - **Home screen date modes (`AD` / `BS` / `Off`):** Supports Nepali Bikram Sambat (`BS`) dates (in English or Devanagari when the device language is Nepali), Gregorian (`AD`) dates, or hiding the date (`Off`).
-- **Lightweight APK:** Trimmed unused dependencies, enabled R8/resource shrinking, and configured per-ABI split release APKs.
+- **Smaller APK:** Reduced the release APK from 1.61 MiB to 429 KB (about 74%) by filtering unused locales, removing unused UI dependencies, and excluding packaging metadata.
 - **Gestures & shortcuts:** Configurable swipe up/down/left/right, double tap, and clock/date tap actions (open app, lock screen, notification drawer, quick settings, app list, or recents).
 - **Customizable layout:** Independent alignment for clock/date, home apps, and app drawer, adjustable text size, app renaming, and hidden apps.
 - **Zero network access:** No `INTERNET` permission—does not collect or transmit any data.
 
 ## Build & CI/CD
 
-- Local release split APK build:
+- Local release APK build:
   ```bash
   ./gradlew assembleRelease
   ```
