@@ -1,59 +1,51 @@
 package app.olaunchercf.ui
 
-import SettingsTheme
-import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ScrollView
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.Space
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.findNavController
 import app.olaunchercf.BuildConfig
+import app.olaunchercf.MainActivity
 import app.olaunchercf.MainViewModel
 import app.olaunchercf.R
 import app.olaunchercf.data.Constants
 import app.olaunchercf.data.Constants.Action
 import app.olaunchercf.data.Constants.AppDrawerFlag
-import app.olaunchercf.data.Constants.Theme.*
+import app.olaunchercf.data.Constants.Theme.Dark
+import app.olaunchercf.data.Constants.Theme.Light
+import app.olaunchercf.data.Constants.Theme.System
+import app.olaunchercf.data.EnumOption
 import app.olaunchercf.data.Prefs
 import app.olaunchercf.databinding.FragmentSettingsBinding
-import app.olaunchercf.helper.*
+import app.olaunchercf.helper.hideStatusBar
+import app.olaunchercf.helper.isOlauncherDefault
+import app.olaunchercf.helper.loadFile
+import app.olaunchercf.helper.openAppInfo
+import app.olaunchercf.helper.resetDefaultLauncher
+import app.olaunchercf.helper.showStatusBar
+import app.olaunchercf.helper.storeFile
 import app.olaunchercf.listener.DeviceAdmin
-import app.olaunchercf.ui.compose.SettingsComposable.SettingsArea
-import app.olaunchercf.ui.compose.SettingsComposable.SettingsGestureItem
-import app.olaunchercf.ui.compose.SettingsComposable.SettingsItem
-import app.olaunchercf.ui.compose.SettingsComposable.SettingsNumberItem
-import app.olaunchercf.ui.compose.SettingsComposable.SettingsToggle
-import app.olaunchercf.ui.compose.SettingsComposable.SettingsTopView
-import app.olaunchercf.ui.compose.SettingsComposable.SettingsTwoButtonRow
-import app.olaunchercf.ui.compose.SettingsComposable.SimpleTextButton
+import kotlin.math.roundToInt
 
 class SettingsFragment : Fragment() {
 
@@ -66,6 +58,7 @@ class SettingsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val offset = 5
+    private var activeSelectorClose: (() -> Unit)? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -80,323 +73,511 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.testView.setContent {
-
-            val isDark = when (prefs.appTheme) {
-                Light -> false
-                Dark -> true
-                System -> isSystemInDarkTheme()
-            }
-
-            SettingsTheme(isDark) {
-                Settings((prefs.textSize - offset).sp)
-            }
-        }
-    }
-
-    @Composable
-    private fun Settings(fontSize: TextUnit = TextUnit.Unspecified) {
-        val selected = remember { mutableStateOf("") }
-        /*val fs = remember { mutableStateOf(fontSize) }
-
-        val titleFs = if (fs.value.isSpecified) {
-            (fs.value.value * 2).sp
-        } else fs.value
-
-        val iconFs = if (fs.value.isSpecified) {
-            (fs.value.value * 1.5).sp
-        } else fs.value */
-
-        val changeLauncherText = if (isOlauncherDefault(requireContext())) {
-            R.string.change_default_launcher
-        } else {
-           R.string.set_as_default_launcher
-        }
-
-        Column {
-            SettingsTopView(
-                stringResource(R.string.app_name),
-                onClick = { openAppInfo(requireContext(), android.os.Process.myUserHandle(), BuildConfig.APPLICATION_ID) },
-            ) {
-                SimpleTextButton(stringResource(R.string.hidden_apps) ) {
-                    showHiddenApps()
-                }
-                SimpleTextButton(stringResource(changeLauncherText) ) {
-                    resetDefaultLauncher(requireContext())
-                }
-            }
-            SettingsArea(
-                title = stringResource(R.string.appearance),
-                selected = selected,
-                items = arrayOf(
-                    { _, onChange ->
-                        SettingsToggle(
-                            title = stringResource(R.string.status_bar),
-                            onChange = onChange,
-                            state = remember { mutableStateOf(prefs.showStatusBar) },
-                        ) { toggleStatusBar() }
-                    },
-                    { open, onChange ->
-                        SettingsItem(
-                            title = stringResource(R.string.theme_mode),
-                            open = open,
-                            onChange = onChange,
-                            currentSelection = remember { mutableStateOf(prefs.appTheme) },
-                            values = arrayOf(System, Light, Dark),
-                            onSelect = { j -> setTheme(j) }
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsItem(
-                            open = open,
-                            onChange = onChange,
-                            title = stringResource(R.string.app_language),
-                            currentSelection = remember { mutableStateOf(prefs.language) },
-                            values = Constants.Language.values(),
-                            onSelect = { j -> setLang(j) }
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsNumberItem(
-                            title = stringResource(R.string.app_text_size),
-                            open = open,
-                            onChange = onChange,
-                            currentSelection = remember { mutableStateOf(prefs.textSize) },
-                            min = Constants.TEXT_SIZE_MIN,
-                            max = Constants.TEXT_SIZE_MAX,
-                            onValueChange = { },
-                            onSelect = { f -> setTextSize(f) }
-                        )
-                    }
-                )
-            )
-            SettingsArea(title = stringResource(R.string.behavior),
-                selected = selected,
-                items = arrayOf(
-                    { _, onChange ->
-                        SettingsToggle(
-                            title = stringResource(R.string.auto_show_keyboard),
-                            onChange = onChange,
-                            state = remember { mutableStateOf(prefs.autoShowKeyboard) },
-                        ) { toggleKeyboardText() }
-                    },
-                    { _, onChange ->
-                        SettingsToggle(
-                            title = stringResource(R.string.auto_open_apps),
-                            onChange = onChange,
-                            state = remember { mutableStateOf(prefs.autoOpenApp) },
-                        ) { toggleAutoOpenApp() }
-                    },
-                )
-            )
-            SettingsArea(title = stringResource(R.string.homescreen),
-                selected = selected,
-                items = arrayOf(
-                    { open, onChange ->
-                        SettingsNumberItem(
-                            title = stringResource(R.string.apps_on_home_screen),
-                            open = open,
-                            onChange = onChange,
-                            currentSelection = remember { mutableStateOf(prefs.homeAppsNum) },
-                            min = 0,
-                            max = Constants.MAX_HOME_APPS,
-                            onSelect = { j -> updateHomeAppsNum(j) }
-                        )
-                    },
-                    { _, onChange ->
-                        SettingsToggle(
-                            title = stringResource(R.string.show_time),
-                            onChange = onChange,
-                            state = remember { mutableStateOf(prefs.showTime) }
-                        ) { toggleShowTime() }
-                    },
-                    { open, onChange ->
-                        val dateMode = remember { mutableStateOf(prefs.dateMode) }
-                        SettingsItem(
-                            title = stringResource(R.string.show_date),
-                            open = open,
-                            onChange = onChange,
-                            currentSelection = dateMode,
-                            values = Constants.DateMode.values(),
-                            active = dateMode.value != Constants.DateMode.Off,
-                            onSelect = { mode -> setDateMode(mode) }
-                        )
-                    },
-                    { _, onChange ->
-                        SettingsToggle(
-                            title = stringResource(R.string.lock_home_apps),
-                            onChange = onChange,
-                            state = remember { mutableStateOf(prefs.homeLocked) }
-                        ) { prefs.homeLocked = !prefs.homeLocked }
-                    },
-                    { _, onChange ->
-                        SettingsToggle(
-                            title = stringResource(R.string.extend_home_apps_area),
-                            onChange = onChange,
-                            state = remember { mutableStateOf(prefs.extendHomeAppsArea) }
-                        ) { prefs.extendHomeAppsArea = !prefs.extendHomeAppsArea }
-                    },
-                )
-            )
-            SettingsArea(title = stringResource(R.string.alignment),
-                selected = selected,
-                items = arrayOf(
-                    { open, onChange ->
-                        SettingsItem(
-                            title = stringResource(R.string.home_alignment),
-                            open = open,
-                            onChange = onChange,
-                            currentSelection = remember { mutableStateOf(prefs.homeAlignment) },
-                            values = arrayOf(Constants.Gravity.Left, Constants.Gravity.Center, Constants.Gravity.Right),
-                            onSelect = { gravity -> setHomeAlignment(gravity) }
-                        )
-                    },
-                    { _, onChange ->
-                        SettingsToggle(
-                            title = stringResource(R.string.home_alignment_bottom),
-                            onChange = onChange,
-                            state = remember { mutableStateOf(prefs.homeAlignmentBottom) }
-                        ) { toggleHomeAppsBottom() }
-                    },
-                    { open, onChange ->
-                        SettingsItem(
-                            title = stringResource(R.string.clock_alignment),
-                            open = open,
-                            onChange = onChange,
-                            currentSelection = remember { mutableStateOf(prefs.clockAlignment) },
-                            values = arrayOf(Constants.Gravity.Left, Constants.Gravity.Center, Constants.Gravity.Right),
-                            onSelect = { gravity -> setClockAlignment(gravity) }
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsItem(
-                            title = stringResource(R.string.drawer_alignment),
-                            open = open,
-                            onChange = onChange,
-                            currentSelection = remember { mutableStateOf(prefs.drawerAlignment) },
-                            values = arrayOf(Constants.Gravity.Left, Constants.Gravity.Center, Constants.Gravity.Right),
-                            onSelect = { j -> viewModel.updateDrawerAlignment(j) }
-                        )
-                    },
-                )
-            )
-            SettingsArea(title = stringResource(R.string.gestures),
-                selected = selected,
-                items = arrayOf(
-                    { open, onChange ->
-                        SettingsGestureItem(
-                            title = stringResource(R.string.swipe_left_app),
-                            open = open,
-                            onChange = onChange,
-                            currentAction = prefs.swipeLeftAction,
-                            onSelect = { j -> updateGesture(AppDrawerFlag.SetSwipeLeft, j) },
-                            appLabel = prefs.appSwipeLeft.appLabel.ifEmpty { "Camera" },
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsGestureItem(
-                            title = stringResource(R.string.swipe_right_app),
-                            open = open,
-                            onChange = onChange,
-                            currentAction = prefs.swipeRightAction,
-                            onSelect = { j -> updateGesture(AppDrawerFlag.SetSwipeRight, j) },
-                            appLabel = prefs.appSwipeRight.appLabel.ifEmpty { "Phone" },
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsGestureItem(
-                            title = stringResource(R.string.swipe_up_app),
-                            open = open,
-                            onChange = onChange,
-                            currentAction = prefs.swipeUpAction,
-                            onSelect = { j -> updateGesture(AppDrawerFlag.SetSwipeUp, j) },
-                            appLabel = prefs.appSwipeUp.appLabel,
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsGestureItem(
-                            title = stringResource(R.string.swipe_down_app),
-                            open = open,
-                            onChange = onChange,
-                            currentAction = prefs.swipeDownAction,
-                            onSelect = { j -> updateGesture(AppDrawerFlag.SetSwipeDown, j) },
-                            appLabel = prefs.appSwipeDown.appLabel,
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsGestureItem(
-                            title = stringResource(R.string.clock_click_app),
-                            open = open,
-                            onChange = onChange,
-                            currentAction = prefs.clickClockAction,
-                            onSelect = { j -> updateGesture(AppDrawerFlag.SetClickClock, j) },
-                            appLabel = prefs.appClickClock.appLabel.ifEmpty { "Clock" },
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsGestureItem(
-                            title = stringResource(R.string.date_click_app),
-                            open = open,
-                            onChange = onChange,
-                            currentAction = prefs.clickDateAction,
-                            onSelect = { j -> updateGesture(AppDrawerFlag.SetClickDate, j) },
-                            appLabel = prefs.appClickDate.appLabel.ifEmpty { "Calendar" },
-                        )
-                    },
-                    { open, onChange ->
-                        SettingsGestureItem(
-                            title = stringResource(R.string.double_tap),
-                            open = open,
-                            onChange = onChange,
-                            currentAction = prefs.doubleTapAction,
-                            onSelect = { j -> updateGesture(AppDrawerFlag.SetDoubleTap, j) },
-                            appLabel = prefs.appDoubleTap.appLabel
-                        )
-                    }
-                )
-            )
-            SettingsArea(title = getString(R.string.backup),
-                selected = selected,
-                items = arrayOf(
-                    { _, _ ->
-                        SettingsTwoButtonRow(
-                            firstButtonText = getString(R.string.load_backup),
-                            secondButtonText = getString(R.string.store_backup),
-                            firstButtonAction = { loadFile(requireActivity()) },
-                            secondButtonAction = { storeFile(requireActivity()) },
-                        )
-                    }
-                )
-            )
-
-            // version number
-            BasicText(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(10.dp, 5.dp),
-                text = "Version: ${requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName}",
-                style = androidx.compose.ui.text.TextStyle(color = Color.DarkGray)
-            )
-        }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        prefs = Prefs(requireContext())
-        viewModel = activity?.run {
-            ViewModelProvider(this).get(MainViewModel::class.java)
-        } ?: throw Exception("Invalid Activity")
-
+        viewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
         viewModel.isOlauncherDefault()
 
-        deviceManager = context?.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        deviceManager = requireContext().getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         componentName = ComponentName(requireContext(), DeviceAdmin::class.java)
         checkAdminPermission()
+
+        buildSettingsUi()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        activeSelectorClose = null
         _binding = null
+    }
+
+    private fun buildSettingsUi() {
+        val ctx = requireContext()
+        val container = binding.settingsContainer
+        container.removeAllViews()
+
+        val isDark = when (prefs.appTheme) {
+            Light -> false
+            Dark -> true
+            System -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        }
+        val textColor = if (isDark) Color.WHITE else Color.BLACK
+        val disabledColor = 0xFF858585.toInt()
+        val cardBgColor = ContextCompat.getColor(ctx, if (isDark) R.color.blackTrans50 else R.color.blackInverseTrans50)
+        val selectorBgColor = ContextCompat.getColor(ctx, if (isDark) R.color.blackTrans80 else R.color.blackInverseTrans80)
+        val borderColor = ContextCompat.getColor(ctx, R.color.blackInverseTrans50)
+        val fontSizeSp = (prefs.textSize - offset).toFloat()
+        val sansLight = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        val sansBold = Typeface.create("sans-serif", Typeface.BOLD)
+
+        fun dp(value: Float): Int = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, value, resources.displayMetrics
+        ).roundToInt()
+
+        fun roundedBackground(fillColor: Int, strokeWidthPx: Int = 0): GradientDrawable {
+            return GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(10f).toFloat()
+                setColor(fillColor)
+                if (strokeWidthPx > 0) {
+                    setStroke(strokeWidthPx, borderColor)
+                }
+            }
+        }
+
+        fun closeOpenSelector() {
+            activeSelectorClose?.invoke()
+            activeSelectorClose = null
+        }
+
+        fun createCard(): LinearLayout {
+            val card = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                background = roundedBackground(cardBgColor, dp(0.5f).coerceAtLeast(1))
+                setPadding(dp(20f), dp(20f), dp(20f), dp(20f))
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(dp(12f), dp(12f), dp(12f), 0)
+                }
+            }
+            container.addView(card)
+            return card
+        }
+
+        fun addSectionTitle(card: LinearLayout, title: String) {
+            val tv = TextView(ctx).apply {
+                text = title
+                setTextColor(textColor)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 32f)
+                setPadding(0, 0, 0, dp(12f))
+            }
+            card.addView(tv)
+        }
+
+        fun createButtonText(label: String, bold: Boolean = true, color: Int = textColor, onClick: () -> Unit): TextView {
+            return TextView(ctx).apply {
+                text = label
+                setTextColor(color)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
+                typeface = if (bold) sansBold else sansLight
+                gravity = Gravity.CENTER
+                minWidth = dp(64f)
+                minHeight = dp(36f)
+                setPadding(dp(12f), dp(8f), dp(12f), dp(8f))
+                setOnClickListener { onClick() }
+            }
+        }
+
+        fun addSettingRow(
+            parent: LinearLayout,
+            title: String,
+            buttonText: String,
+            active: Boolean = true,
+            onClick: () -> Unit
+        ): TextView {
+            val row = LinearLayout(ctx).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            val titleView = TextView(ctx).apply {
+                text = title
+                setTextColor(textColor)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
+                typeface = sansLight
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val buttonView = createButtonText(
+                label = buttonText,
+                bold = true,
+                color = if (active) textColor else disabledColor,
+                onClick = onClick
+            )
+            row.addView(titleView)
+            row.addView(buttonView)
+            parent.addView(row)
+            return buttonView
+        }
+
+        fun addToggle(card: LinearLayout, title: String, initial: Boolean, onToggle: () -> Boolean) {
+            var state = initial
+            lateinit var btn: TextView
+            btn = addSettingRow(
+                parent = card,
+                title = title,
+                buttonText = getString(if (state) R.string.on else R.string.off),
+                onClick = {
+                    closeOpenSelector()
+                    state = onToggle()
+                    btn.text = getString(if (state) R.string.on else R.string.off)
+                }
+            )
+        }
+
+        fun <T : EnumOption> addEnumItem(
+            card: LinearLayout,
+            title: String,
+            initial: T,
+            values: Array<T>,
+            activeCheck: (T) -> Boolean = { true },
+            displayText: (T) -> String = { it.string(ctx) },
+            onSelect: (T) -> Unit
+        ) {
+            var current = initial
+            val slot = FrameLayout(ctx).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            card.addView(slot)
+
+            val rowHolder = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            val selectorScroll = HorizontalScrollView(ctx).apply {
+                visibility = View.GONE
+                isHorizontalScrollBarEnabled = false
+                background = roundedBackground(selectorBgColor)
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            val selectorRow = LinearLayout(ctx).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.END
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            selectorScroll.addView(selectorRow)
+            slot.addView(rowHolder)
+            slot.addView(selectorScroll)
+
+            lateinit var btn: TextView
+            fun close() {
+                selectorScroll.visibility = View.GONE
+                rowHolder.visibility = View.VISIBLE
+            }
+
+            btn = addSettingRow(
+                parent = rowHolder,
+                title = title,
+                buttonText = displayText(current),
+                active = activeCheck(current),
+                onClick = {
+                    closeOpenSelector()
+                    rowHolder.visibility = View.GONE
+                    selectorScroll.visibility = View.VISIBLE
+                    activeSelectorClose = ::close
+                }
+            )
+
+            for (opt in values) {
+                selectorRow.addView(createButtonText(opt.string(ctx)) {
+                    closeOpenSelector()
+                    current = opt
+                    onSelect(opt)
+                    btn.text = displayText(opt)
+                    btn.setTextColor(if (activeCheck(opt)) textColor else disabledColor)
+                })
+            }
+        }
+
+        fun addNumberItem(
+            card: LinearLayout,
+            title: String,
+            initial: Int,
+            min: Int,
+            max: Int,
+            onSelect: (Int) -> Unit
+        ) {
+            var committed = initial
+            var pending = initial
+            val slot = FrameLayout(ctx).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            card.addView(slot)
+
+            val rowHolder = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            val selectorRow = LinearLayout(ctx).apply {
+                visibility = View.GONE
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                background = roundedBackground(selectorBgColor)
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            slot.addView(rowHolder)
+            slot.addView(selectorRow)
+
+            lateinit var btn: TextView
+            lateinit var valueLabel: TextView
+            fun close() {
+                selectorRow.visibility = View.GONE
+                rowHolder.visibility = View.VISIBLE
+            }
+
+            btn = addSettingRow(
+                parent = rowHolder,
+                title = title,
+                buttonText = committed.toString(),
+                onClick = {
+                    closeOpenSelector()
+                    pending = committed
+                    valueLabel.text = pending.toString()
+                    rowHolder.visibility = View.GONE
+                    selectorRow.visibility = View.VISIBLE
+                    activeSelectorClose = ::close
+                }
+            )
+
+            val plusBtn = createButtonText("+") {
+                if (pending < max) {
+                    pending += 1
+                    valueLabel.text = pending.toString()
+                }
+            }
+            valueLabel = TextView(ctx).apply {
+                text = pending.toString()
+                setTextColor(textColor)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
+                typeface = sansLight
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val minusBtn = createButtonText("-") {
+                if (pending > min) {
+                    pending -= 1
+                    valueLabel.text = pending.toString()
+                }
+            }
+            val saveBtn = createButtonText(getString(R.string.save)) {
+                closeOpenSelector()
+                committed = pending
+                btn.text = committed.toString()
+                onSelect(committed)
+            }
+
+            selectorRow.addView(plusBtn)
+            selectorRow.addView(valueLabel)
+            selectorRow.addView(minusBtn)
+            selectorRow.addView(saveBtn)
+        }
+
+        // Top card
+        val topCard = createCard()
+        val topHeader = FrameLayout(ctx).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val topTitle = TextView(ctx).apply {
+            text = getString(R.string.app_name)
+            setTextColor(textColor)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 32f)
+            setPadding(0, 0, 0, dp(12f))
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER_VERTICAL or Gravity.START
+            )
+        }
+        val infoIcon = ImageView(ctx).apply {
+            setImageResource(R.drawable.ic_outline_info_24)
+            layoutParams = FrameLayout.LayoutParams(dp(16f), dp(16f), Gravity.TOP or Gravity.END)
+            setOnClickListener {
+                openAppInfo(ctx, android.os.Process.myUserHandle(), BuildConfig.APPLICATION_ID)
+            }
+        }
+        topHeader.addView(topTitle)
+        topHeader.addView(infoIcon)
+        topCard.addView(topHeader)
+
+        val changeLauncherText = if (isOlauncherDefault(ctx)) {
+            R.string.change_default_launcher
+        } else {
+            R.string.set_as_default_launcher
+        }
+        topCard.addView(createButtonText(getString(R.string.hidden_apps), bold = false) {
+            showHiddenApps()
+        }.apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        })
+        topCard.addView(createButtonText(getString(changeLauncherText), bold = false) {
+            resetDefaultLauncher(ctx)
+        }.apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        })
+
+        // Appearance
+        val appearanceCard = createCard()
+        addSectionTitle(appearanceCard, getString(R.string.appearance))
+        addToggle(appearanceCard, getString(R.string.status_bar), prefs.showStatusBar) {
+            toggleStatusBar()
+            prefs.showStatusBar
+        }
+        addEnumItem(
+            appearanceCard,
+            getString(R.string.theme_mode),
+            prefs.appTheme,
+            arrayOf(System, Light, Dark)
+        ) { setTheme(it) }
+        addEnumItem(
+            appearanceCard,
+            getString(R.string.app_language),
+            prefs.language,
+            Constants.Language.values()
+        ) { setLang(it) }
+        addNumberItem(
+            appearanceCard,
+            getString(R.string.app_text_size),
+            prefs.textSize,
+            Constants.TEXT_SIZE_MIN,
+            Constants.TEXT_SIZE_MAX
+        ) { setTextSize(it) }
+
+        // Behavior
+        val behaviorCard = createCard()
+        addSectionTitle(behaviorCard, getString(R.string.behavior))
+        addToggle(behaviorCard, getString(R.string.auto_show_keyboard), prefs.autoShowKeyboard) {
+            toggleKeyboardText()
+            prefs.autoShowKeyboard
+        }
+        addToggle(behaviorCard, getString(R.string.auto_open_apps), prefs.autoOpenApp) {
+            toggleAutoOpenApp()
+            prefs.autoOpenApp
+        }
+
+        // Homescreen
+        val homescreenCard = createCard()
+        addSectionTitle(homescreenCard, getString(R.string.homescreen))
+        addNumberItem(
+            homescreenCard,
+            getString(R.string.apps_on_home_screen),
+            prefs.homeAppsNum,
+            0,
+            Constants.MAX_HOME_APPS
+        ) { updateHomeAppsNum(it) }
+        addToggle(homescreenCard, getString(R.string.show_time), prefs.showTime) {
+            toggleShowTime()
+            prefs.showTime
+        }
+        addEnumItem(
+            homescreenCard,
+            getString(R.string.show_date),
+            prefs.dateMode,
+            Constants.DateMode.values(),
+            activeCheck = { it != Constants.DateMode.Off }
+        ) { setDateMode(it) }
+        addToggle(homescreenCard, getString(R.string.lock_home_apps), prefs.homeLocked) {
+            prefs.homeLocked = !prefs.homeLocked
+            prefs.homeLocked
+        }
+        addToggle(homescreenCard, getString(R.string.extend_home_apps_area), prefs.extendHomeAppsArea) {
+            prefs.extendHomeAppsArea = !prefs.extendHomeAppsArea
+            prefs.extendHomeAppsArea
+        }
+
+        // Alignment
+        val alignmentCard = createCard()
+        addSectionTitle(alignmentCard, getString(R.string.alignment))
+        val gravities = arrayOf(Constants.Gravity.Left, Constants.Gravity.Center, Constants.Gravity.Right)
+        addEnumItem(alignmentCard, getString(R.string.home_alignment), prefs.homeAlignment, gravities) {
+            setHomeAlignment(it)
+        }
+        addToggle(alignmentCard, getString(R.string.home_alignment_bottom), prefs.homeAlignmentBottom) {
+            toggleHomeAppsBottom()
+            prefs.homeAlignmentBottom
+        }
+        addEnumItem(alignmentCard, getString(R.string.clock_alignment), prefs.clockAlignment, gravities) {
+            setClockAlignment(it)
+        }
+        addEnumItem(alignmentCard, getString(R.string.drawer_alignment), prefs.drawerAlignment, gravities) {
+            viewModel.updateDrawerAlignment(it)
+        }
+
+        // Gestures
+        val gesturesCard = createCard()
+        addSectionTitle(gesturesCard, getString(R.string.gestures))
+        fun addGestureItem(titleRes: Int, current: Action, appLabel: String, flag: AppDrawerFlag) {
+            addEnumItem(
+                gesturesCard,
+                getString(titleRes),
+                current,
+                Action.values(),
+                activeCheck = { it != Action.Disabled },
+                displayText = { action ->
+                    if (action == Action.OpenApp) "Open $appLabel" else action.string(ctx)
+                }
+            ) { updateGesture(flag, it) }
+        }
+        addGestureItem(R.string.swipe_left_app, prefs.swipeLeftAction, prefs.appSwipeLeft.appLabel.ifEmpty { "Camera" }, AppDrawerFlag.SetSwipeLeft)
+        addGestureItem(R.string.swipe_right_app, prefs.swipeRightAction, prefs.appSwipeRight.appLabel.ifEmpty { "Phone" }, AppDrawerFlag.SetSwipeRight)
+        addGestureItem(R.string.swipe_up_app, prefs.swipeUpAction, prefs.appSwipeUp.appLabel, AppDrawerFlag.SetSwipeUp)
+        addGestureItem(R.string.swipe_down_app, prefs.swipeDownAction, prefs.appSwipeDown.appLabel, AppDrawerFlag.SetSwipeDown)
+        addGestureItem(R.string.clock_click_app, prefs.clickClockAction, prefs.appClickClock.appLabel.ifEmpty { "Clock" }, AppDrawerFlag.SetClickClock)
+        addGestureItem(R.string.date_click_app, prefs.clickDateAction, prefs.appClickDate.appLabel.ifEmpty { "Calendar" }, AppDrawerFlag.SetClickDate)
+        addGestureItem(R.string.double_tap, prefs.doubleTapAction, prefs.appDoubleTap.appLabel, AppDrawerFlag.SetDoubleTap)
+
+        // Backup
+        val backupCard = createCard()
+        addSectionTitle(backupCard, getString(R.string.backup))
+        val backupRow = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        backupRow.addView(Space(ctx).apply {
+            layoutParams = LinearLayout.LayoutParams(0, 0, 1f)
+        })
+        backupRow.addView(createButtonText(getString(R.string.load_backup)) { loadFile(requireActivity()) })
+        backupRow.addView(createButtonText(getString(R.string.store_backup)) { storeFile(requireActivity()) })
+        backupCard.addView(backupRow)
+
+        // Version footer
+        val versionName = ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName
+        val versionView = TextView(ctx).apply {
+            text = "Version: $versionName"
+            setTextColor(Color.DKGRAY)
+            setPadding(dp(10f), dp(5f), dp(10f), dp(5f))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END
+            }
+        }
+        container.addView(versionView)
     }
 
     private fun setHomeAlignment(gravity: Constants.Gravity) {
@@ -405,8 +586,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun toggleHomeAppsBottom() {
-        val onBottom  = !prefs.homeAlignmentBottom
-
+        val onBottom = !prefs.homeAlignmentBottom
         prefs.homeAlignmentBottom = onBottom
         viewModel.updateHomeAppsAlignment(prefs.homeAlignment, onBottom)
     }
@@ -434,8 +614,7 @@ class SettingsFragment : Fragment() {
 
     private fun showHiddenApps() {
         viewModel.getHiddenApps()
-        findNavController().navigate(
-            R.id.action_settingsFragment_to_appListFragment,
+        (activity as? MainActivity)?.openAppDrawer(
             bundleOf("flag" to AppDrawerFlag.HiddenApps.toString())
         )
     }
@@ -460,16 +639,15 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setTheme(appTheme: Constants.Theme) {
-        // if (AppCompatDelegate.getDefaultNightMode() == appTheme) return // TODO find out what this did
         prefs.appTheme = appTheme
         requireActivity().recreate()
     }
 
-    private fun setLang(lang_int: Constants.Language) {
-
-        prefs.language = lang_int
+    private fun setLang(lang: Constants.Language) {
+        prefs.language = lang
         requireActivity().recreate()
     }
+
     private fun setTextSize(size: Int) {
         prefs.textSize = size
     }
@@ -484,19 +662,15 @@ class SettingsFragment : Fragment() {
             AppDrawerFlag.SetClickDate -> prefs.clickDateAction = action
             AppDrawerFlag.SetDoubleTap -> prefs.doubleTapAction = action
             AppDrawerFlag.SetHomeApp,
-                AppDrawerFlag.HiddenApps,
-                AppDrawerFlag.LaunchApp -> {}
+            AppDrawerFlag.HiddenApps,
+            AppDrawerFlag.LaunchApp -> {}
         }
 
-        when(action) {
-            Action.OpenApp -> {
-                viewModel.getAppList()
-                findNavController().navigate(
-                    R.id.action_settingsFragment_to_appListFragment,
-                    bundleOf("flag" to flag.toString())
-                )
-            }
-            else -> {}
+        if (action == Action.OpenApp) {
+            viewModel.getAppList()
+            (activity as? MainActivity)?.openAppDrawer(
+                bundleOf("flag" to flag.toString())
+            )
         }
     }
 }

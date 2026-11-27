@@ -1,14 +1,12 @@
 package app.olaunchercf.data
 
 import android.annotation.SuppressLint
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
+import android.content.Context
 import app.olaunchercf.R
 import java.util.*
 
 interface EnumOption {
-    @Composable
-    fun string(): String
+    fun string(context: Context): String
 }
 
 object Constants {
@@ -74,10 +72,9 @@ object Constants {
         Turkish,
         Vietnamese;
 
-        @Composable
-        override fun string(): String {
+        override fun string(context: Context): String {
             return when(this) {
-                System -> stringResource(R.string.lang_system)
+                System -> context.getString(R.string.lang_system)
                 Arabic -> "العربية"
                 Chinese -> "中文"
                 Croatian -> "Hrvatski"
@@ -137,12 +134,11 @@ object Constants {
         Center,
         Right;
 
-        @Composable
-        override fun string(): String {
+        override fun string(context: Context): String {
             return when(this) {
-                Left -> stringResource(R.string.left)
-                Center -> stringResource(R.string.center)
-                Right -> stringResource(R.string.right)
+                Left -> context.getString(R.string.left)
+                Center -> context.getString(R.string.center)
+                Right -> context.getString(R.string.right)
             }
         }
 
@@ -165,16 +161,15 @@ object Constants {
         ShowRecents,
         ShowNotification;
 
-        @Composable
-        override fun string(): String {
+        override fun string(context: Context): String {
             return when(this) {
-                OpenApp -> stringResource(R.string.open_app)
-                LockScreen -> stringResource(R.string.lock_screen)
-                ShowNotification -> stringResource(R.string.show_notifications)
-                ShowAppList -> stringResource(R.string.show_app_list)
-                OpenQuickSettings -> stringResource(R.string.open_quick_settings)
-                ShowRecents -> stringResource(R.string.show_recents)
-                Disabled -> stringResource(R.string.disabled)
+                OpenApp -> context.getString(R.string.open_app)
+                LockScreen -> context.getString(R.string.lock_screen)
+                ShowNotification -> context.getString(R.string.show_notifications)
+                ShowAppList -> context.getString(R.string.show_app_list)
+                OpenQuickSettings -> context.getString(R.string.open_quick_settings)
+                ShowRecents -> context.getString(R.string.show_recents)
+                Disabled -> context.getString(R.string.disabled)
             }
         }
     }
@@ -184,12 +179,11 @@ object Constants {
         Dark,
         Light;
 
-        @Composable
-        override fun string(): String {
+        override fun string(context: Context): String {
             return when(this) {
-                System -> stringResource(R.string.lang_system)
-                Dark -> stringResource(R.string.dark)
-                Light -> stringResource(R.string.light)
+                System -> context.getString(R.string.lang_system)
+                Dark -> context.getString(R.string.dark)
+                Light -> context.getString(R.string.light)
             }
         }
     }
@@ -200,12 +194,11 @@ object Constants {
         BS,
         Off;
 
-        @Composable
-        override fun string(): String {
+        override fun string(context: Context): String {
             return when(this) {
-                AD -> stringResource(R.string.date_ad)
-                BS -> stringResource(R.string.date_bs)
-                Off -> stringResource(R.string.off)
+                AD -> context.getString(R.string.date_ad)
+                BS -> context.getString(R.string.date_bs)
+                Off -> context.getString(R.string.off)
             }
         }
     }
