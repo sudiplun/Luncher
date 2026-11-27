@@ -17,12 +17,35 @@ android {
         versionName "v1.6.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Strip unused library locales from resources.arsc
+        resourceConfigurations += [
+            "en", "ne",
+            "af-rZA", "ar-rSA", "ca-rES", "cs-rCZ", "da-rDK", "de-rDE",
+            "el-rGR", "en-rUS", "es-rES", "et-rEE", "fa-rIR", "fi-rFI",
+            "fr-rFR", "hr-rHR", "hu-rHU", "in-rID", "it-rIT", "iw-rIL",
+            "ja-rJP", "ko-rKR", "lt-rLT", "nl-rNL", "no-rNO", "pl-rPL",
+            "pt-rBR", "pt-rPT", "ro-rRO", "ru-rRU", "sr-rSP", "sv-rSE",
+            "th-rTH", "tr-rTR", "uk-rUA", "vi-rVN", "zh-rCN", "zh-rTW"
+        ]
     }
 
     buildFeatures {
         compose true
         viewBinding = true
         buildConfig = true
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                "kotlin/**",
+                "META-INF/*.version",
+                "META-INF/CHANGES",
+                "META-INF/README.md",
+                "DebugProbesKt.bin"
+            ]
+        }
     }
 
     def releaseFile = rootProject.file("release.properties")
@@ -57,19 +80,6 @@ android {
             minifyEnabled false
             applicationIdSuffix ".debug"
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    buildFeatures {
-        viewBinding = true
-    }
-
-    splits {
-        abi {
-            enable true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            universalApk false
         }
     }
 
