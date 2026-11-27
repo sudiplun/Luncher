@@ -8,8 +8,7 @@ import android.util.TypedValue
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.*
-import androidx.appcompat.content.res.AppCompatResources
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.RecyclerView
@@ -151,7 +150,7 @@ class AppDrawerAdapter(
         val appHideButton: ImageView = itemView.appHide
         val appRenameButton: TextView = itemView.appRename
         val appRenameEdit: EditText = itemView.appRenameEdit
-        private val appHideLayout: ConstraintLayout = itemView.appHideLayout
+        private val appHideLayout: LinearLayout = itemView.appHideLayout
         private val appTitle: TextView = itemView.appTitle
         private val appTitleFrame: FrameLayout = itemView.appTitleFrame
         private val appInfo: ImageView = itemView.appInfo
@@ -168,7 +167,7 @@ class AppDrawerAdapter(
 
                 // set show/hide icon
                 val drawable = if (flag == AppDrawerFlag.HiddenApps) { R.drawable.visibility } else { R.drawable.visibility_off }
-                appHideButton.setImageDrawable(AppCompatResources.getDrawable(context, drawable))
+                appHideButton.setImageDrawable(ContextCompat.getDrawable(context, drawable))
 
                 appRenameEdit.addTextChangedListener(object : TextWatcher {
 
@@ -211,7 +210,7 @@ class AppDrawerAdapter(
 
                 // add icon next to app name to indicate that this app is installed on another profile
                 if (appModel.user != android.os.Process.myUserHandle()) {
-                    val icon = AppCompatResources.getDrawable(context, R.drawable.work_profile)
+                    val icon = ContextCompat.getDrawable(context, R.drawable.work_profile)
                     val prefs = Prefs(context)
                     val px = dp2px(resources, prefs.textSize)
                     icon?.setBounds(0, 0, px, px)

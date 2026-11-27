@@ -22,7 +22,7 @@
 
     </FrameLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:id="@+id/appHideLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -30,16 +30,15 @@
         android:background="?attr/primaryColorInverseTrans90"
         android:clickable="true"
         android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingHorizontal="@dimen/app_padding_vertical">
 
         <EditText
             android:id="@+id/appRenameEdit"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/appRename"
+            android:layout_weight="1"
             android:imeOptions="actionDone"
             android:padding="@dimen/app_padding_vertical"
             android:inputType="textShortMessage"
@@ -50,9 +49,6 @@
             style="@style/TextSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/appHide"
             android:padding="@dimen/app_padding_vertical"
             android:text="@string/rename"
             android:textAllCaps="true" />
@@ -61,26 +57,20 @@
             android:id="@+id/appHide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/appInfo"
             android:contentDescription="@string/hide"
             android:padding="@dimen/app_padding_vertical"
             android:src="@drawable/visibility_off"
-            app:tint="?attr/primaryColor" />
+            android:tint="?attr/primaryColor" />
 
         <ImageView
             android:id="@+id/appInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             android:contentDescription="@string/app"
             android:padding="@dimen/app_padding_vertical"
             android:src="@drawable/ic_outline_info_24"
-            app:tint="?attr/primaryColor" />
+            android:tint="?attr/primaryColor" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </FrameLayout>

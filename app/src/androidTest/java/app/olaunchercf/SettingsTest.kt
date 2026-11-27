@@ -1,63 +1,66 @@
 package app.olaunchercf
 
-import android.content.Context
 import android.content.SharedPreferences
-import android.provider.Settings.Secure.getString
-import android.widget.ScrollView
-import android.widget.TextView
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.navigation.Navigation.findNavController
+import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.matcher.ViewMatchers.hasChildCount
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
+import androidx.test.espresso.matcher.ViewMatchers.isClickable
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import app.olaunchercf.data.Constants
 import app.olaunchercf.data.Prefs
 import app.olaunchercf.ui.AppDrawerAdapter
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
+import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-
 
 class SettingsTest {
 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
+    private lateinit var scenario: ActivityScenario<MainActivity>
     private lateinit var prefs: Prefs
 
     @Before
     fun clearSharedPreferences() {
-        prefs = Prefs(composeTestRule.activity)
-        val shPrefs: SharedPreferences =
-            composeTestRule.activity.getSharedPreferences("app.olauncher", 0)
-        shPrefs.edit().clear().commit()
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario.onActivity { activity ->
+            prefs = Prefs(activity)
+            val shPrefs: SharedPreferences =
+                activity.getSharedPreferences("app.olauncher", 0)
+            shPrefs.edit().clear().commit()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        scenario.close()
     }
 
     @Test
     fun testNumberAppsHomeScreen() {
         for (i in 4 until Constants.MAX_HOME_APPS) {
             goToSettings()
-            increaseAppNumber(i)
+            increaseAppNumber()
             Espresso.pressBack()
             onView(withId(R.id.homeAppsLayout)).check(matches(hasChildCount(i + 1)))
         }
         for (i in Constants.MAX_HOME_APPS downTo 1) {
             goToSettings()
-            decreaseAppNumber(i)
+            decreaseAppNumber()
             Espresso.pressBack()
             onView(withId(R.id.homeAppsLayout)).check(matches(hasChildCount(i - 1)))
         }
         for (i in 0 until 4) {
             goToSettings()
-            increaseAppNumber(i)
+            increaseAppNumber()
             Espresso.pressBack()
             onView(withId(R.id.homeAppsLayout)).check(matches(hasChildCount(i + 1)))
         }
@@ -66,23 +69,23 @@ class SettingsTest {
     @Test
     fun hideClock() {
         goToSettings()
-        clickOnSetting(composeTestRule.activity.getString(R.string.show_time))
+        clickOnSetting(getString(R.string.show_time))
         assert(!prefs.showTime)
     }
 
     @Test
     fun dateMode() {
         goToSettings()
-        clickOnSetting(composeTestRule.activity.getString(R.string.show_date))
-        composeTestRule.onNode(hasText(getString(R.string.date_ad))).performClick()
+        clickOnSetting(getString(R.string.show_date))
+        onView(withText(getString(R.string.date_ad))).perform(scrollTo(), click())
         assert(prefs.dateMode == Constants.DateMode.AD)
 
-        clickOnSetting(composeTestRule.activity.getString(R.string.show_date))
-        composeTestRule.onNode(hasText(getString(R.string.off))).performClick()
+        clickOnSetting(getString(R.string.show_date))
+        onView(withText(getString(R.string.off))).perform(scrollTo(), click())
         assert(prefs.dateMode == Constants.DateMode.Off)
 
-        clickOnSetting(composeTestRule.activity.getString(R.string.show_date))
-        composeTestRule.onNode(hasText(getString(R.string.date_bs))).performClick()
+        clickOnSetting(getString(R.string.show_date))
+        onView(withText(getString(R.string.date_bs))).perform(scrollTo(), click())
         assert(prefs.dateMode == Constants.DateMode.BS)
     }
 
@@ -100,8 +103,8 @@ class SettingsTest {
         goToSettings()
 
         for (action in actions) {
-            clickOnSetting(composeTestRule.activity.getString(action))
-            composeTestRule.onNode(hasText(getString(R.string.open_app))).performClick()
+            clickOnSetting(getString(action))
+            onView(withText(getString(R.string.open_app))).perform(scrollTo(), click())
             pickAppFromList()
 
             val value = when (action) {
@@ -136,7 +139,6 @@ class SettingsTest {
             }
             assert(value == "Camera") { "Actual value: $value" }
         }
-
     }
 
     @Test
@@ -150,45 +152,11 @@ class SettingsTest {
             R.string.swipe_down_app,
         )
 
-
         for (action in actions) {
             goToSettings()
-            clickOnSetting(composeTestRule.activity.getString(action))
-            composeTestRule.onNode(hasText(getString(R.string.lock_screen))).performClick()
-
-            /*val value = when(action) {
-                R.string.date_click_app -> {
-                    assert(prefs.clickDateAction == Constants.Action.OpenApp)
-                    prefs.appClickDate.name
-                }
-                R.string.clock_click_app -> {
-                    assert(prefs.clickClockAction == Constants.Action.OpenApp)
-                    prefs.appClickClock.name
-                }
-                R.string.swipe_left_app -> {
-                    assert(prefs.swipeLeftAction == Constants.Action.OpenApp)
-                    prefs.appSwipeLeft.name
-                }
-                R.string.swipe_right_app -> {
-                    assert(prefs.swipeRightAction == Constants.Action.OpenApp)
-                    prefs.appSwipeRight.name
-                }
-                R.string.swipe_up_app -> {
-                    assert(prefs.swipeUpAction == Constants.Action.OpenApp)
-                    prefs.appSwipeUp.name
-                }
-                R.string.swipe_down_app -> {
-                    assert(prefs.swipeDownAction == Constants.Action.OpenApp)
-                    prefs.appSwipeDown.name
-                }
-                else -> {
-                    assert(false)
-                    return
-                }
-            }*/
-            // assert(value == "Camera") { "Actual value: $value" }
+            clickOnSetting(getString(action))
+            onView(withText(getString(R.string.lock_screen))).perform(scrollTo(), click())
         }
-
     }
 
     @Test
@@ -209,11 +177,9 @@ class SettingsTest {
 
         val string = prefs.saveToString()
 
-        // these change values after saving
         prefs.firstOpen()
         prefs.firstSettingsOpen()
 
-        // load old config
         clearSharedPreferences()
         prefs.loadFromString(string)
 
@@ -234,44 +200,33 @@ class SettingsTest {
     }
 
     private fun clickOnSetting(name: String) {
-        composeTestRule.onNode(hasAnySibling(hasText(name))).assertExists().performScrollTo()
-            .performClick()
+        onView(allOf(hasSibling(withText(name)), isClickable()))
+            .perform(scrollTo(), click())
     }
 
     private fun getString(id: Int): String {
-        return composeTestRule.activity.getString(id)
+        var value = ""
+        scenario.onActivity { value = it.getString(id) }
+        return value
     }
 
     @Test
     fun goToSettings() {
-        composeTestRule.activityRule.scenario.onActivity {
-            findNavController(
-                it,
-                R.id.nav_host_fragment
-            ).navigate(R.id.action_mainFragment_to_settingsFragment)
+        scenario.onActivity {
+            it.openSettings()
         }
-        // composeTestRule.onNode(withId(R.id.touchArea)).performClick()
-        //onView(withText("Olauncher Clutter Free")).check(matches(isDisplayed()))
-        // composeTestRule.onNode(hasAnySibling(hasText("Number of shortcuts"))).assertIsDisplayed()
         onView(withId(R.id.scrollLayout)).check(matches(isDisplayed()))
     }
 
-    private fun increaseAppNumber(i: Int) {
-        composeTestRule.onNode(hasAnySibling(hasText(composeTestRule.activity.getString(R.string.apps_on_home_screen))))
-            .assertExists().performScrollTo().performClick()
-        /*val buttonMatcher = hasTestTag("test$i")
-        composeTestRule.onNode(buttonMatcher).assertExists().performScrollTo().performClick()*/
-        composeTestRule.onNodeWithText("+").assertIsDisplayed().performClick()
-        composeTestRule.onNodeWithText("Save").assertIsDisplayed().performClick()
-        composeTestRule.onAllNodesWithText((i + 1).toString())[0].assertIsDisplayed()
+    private fun increaseAppNumber() {
+        clickOnSetting(getString(R.string.apps_on_home_screen))
+        onView(withText("+")).perform(scrollTo(), click())
+        onView(withText(getString(R.string.save))).perform(scrollTo(), click())
     }
 
-    private fun decreaseAppNumber(i: Int) {
-        //composeTestRule.onAllNodesWithText(i.toString())[0].performClick()
-        composeTestRule.onNode(hasAnySibling(hasText(composeTestRule.activity.getString(R.string.apps_on_home_screen))))
-            .assertExists().performScrollTo().performClick()
-        composeTestRule.onNodeWithText("-").assertIsDisplayed().performClick()
-        composeTestRule.onNodeWithText("Save").assertIsDisplayed().performClick()
-        composeTestRule.onAllNodesWithText((i - 1).toString())[0].assertIsDisplayed()
+    private fun decreaseAppNumber() {
+        clickOnSetting(getString(R.string.apps_on_home_screen))
+        onView(withText("-")).perform(scrollTo(), click())
+        onView(withText(getString(R.string.save))).perform(scrollTo(), click())
     }
 }
