@@ -2,54 +2,62 @@ package app.olaunchercf
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import app.olaunchercf.data.Constants
 import app.olaunchercf.data.Constants.value
 import app.olaunchercf.data.Prefs
 import app.olaunchercf.databinding.ActivityMainBinding
 import app.olaunchercf.helper.isTablet
 import app.olaunchercf.helper.showToastLong
+import app.olaunchercf.ui.AppDrawerFragment
+import app.olaunchercf.ui.HomeFragment
+import app.olaunchercf.ui.SettingsFragment
 import java.io.BufferedReader
 import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
 
     private lateinit var prefs: Prefs
-    private lateinit var navController: NavController
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: ActivityMainBinding
 
+    override fun attachBaseContext(newBase: Context) {
+        val theme = Prefs(newBase).appTheme
+        if (theme != Constants.Theme.System) {
+            val config = Configuration(newBase.resources.configuration)
+            val nightBit = if (theme == Constants.Theme.Dark) {
+                Configuration.UI_MODE_NIGHT_YES
+            } else {
+                Configuration.UI_MODE_NIGHT_NO
+            }
+            config.uiMode = (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or nightBit
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
+
+    @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        if (navController.currentDestination?.id != R.id.mainFragment)
+        if (supportFragmentManager.backStackEntryCount > 0)
             super.onBackPressed()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         prefs = Prefs(this)
-        val themeMode = when (prefs.appTheme) {
-            Constants.Theme.Light -> AppCompatDelegate.MODE_NIGHT_NO
-            Constants.Theme.Dark -> AppCompatDelegate.MODE_NIGHT_YES
-            Constants.Theme.System -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-        }
-        AppCompatDelegate.setDefaultNightMode(themeMode)
-        //super.onCreate(savedInstanceState)
-        //setContentView(R.layout.activity_main)
-
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
@@ -57,7 +65,12 @@ class MainActivity : AppCompatActivity() {
 
         setLanguage()
 
-        navController = Navigation.findNavController(this, R.id.nav_host_fragment)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, HomeFragment())
+                .commit()
+        }
+
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
 
         initClickListeners()
@@ -120,11 +133,37 @@ class MainActivity : AppCompatActivity() {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
-    private fun backToHomeScreen() {
+    fun openAppDrawer(args: Bundle? = null) {
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                android.R.anim.fade_in,
+                android.R.anim.fade_out,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
+            .replace(R.id.nav_host_fragment, AppDrawerFragment().apply { arguments = args })
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun openSettings() {
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                android.R.anim.fade_in,
+                android.R.anim.fade_out,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
+            .replace(R.id.nav_host_fragment, SettingsFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun backToHomeScreen() {
         // Whenever home button is pressed or user leaves the launcher,
         // pop all the fragments except main
-        if (navController.currentDestination?.id != R.id.mainFragment)
-            navController.popBackStack(R.id.mainFragment, false)
+        if (supportFragmentManager.backStackEntryCount > 0)
+            supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
     }
 
     private fun openLauncherChooser(resetFailed: Boolean) {

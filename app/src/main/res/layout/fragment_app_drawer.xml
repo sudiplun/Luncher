@@ -13,22 +13,19 @@
         android:animateLayoutChanges="true"
         android:orientation="horizontal">
 
-        <androidx.appcompat.widget.SearchView
+        <EditText
             android:id="@+id/search"
+            style="@style/AppSearchText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="end"
+            android:hint="__"
             android:imeOptions="actionSearch"
+            android:importantForAutofill="no"
             android:paddingHorizontal="8dp"
             android:paddingVertical="0dp"
-            android:textCursorDrawable="@null"
-            app:closeIcon="@null"
-            app:iconifiedByDefault="false"
-            app:queryBackground="@null"
-            app:queryHint="__"
-            app:searchIcon="@null"
-            app:theme="@style/AppSearchText" />
+            android:textCursorDrawable="@null" />
     </LinearLayout>
 
     <TextView

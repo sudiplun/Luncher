@@ -18,8 +18,7 @@ import androidx.core.view.children
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import app.olaunchercf.MainActivity
 import app.olaunchercf.MainViewModel
 import app.olaunchercf.R
 import app.olaunchercf.data.AppModel
@@ -225,20 +224,9 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     private fun showAppList(flag: AppDrawerFlag, showHiddenApps: Boolean = false, n: Int = 0) {
         viewModel.getAppList(showHiddenApps)
-        lifecycleScope.launch {
-            try {
-                findNavController().navigate(
-                    R.id.action_mainFragment_to_appListFragment,
-                    bundleOf("flag" to flag.toString(), "n" to n)
-                )
-            } catch (e: Exception) {
-                findNavController().navigate(
-                    R.id.appListFragment,
-                    bundleOf("flag" to flag.toString())
-                )
-                e.printStackTrace()
-            }
-        }
+        (activity as? MainActivity)?.openAppDrawer(
+            bundleOf("flag" to flag.toString(), "n" to n)
+        )
     }
 
     private fun openSwipeRightApp() {
@@ -361,11 +349,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
             override fun onLongClick() {
                 super.onLongClick()
-                try {
-                    findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
-                    // viewModel.firstOpen(false)
-                } catch (e: java.lang.Exception) {
-                }
+                (activity as? MainActivity)?.openSettings()
             }
 
             override fun onDoubleClick() {
