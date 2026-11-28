@@ -12,8 +12,8 @@ android {
         applicationId "app.luncher"
         minSdkVersion 23
         targetSdkVersion 33
-        versionCode 35
-        versionName "v1.6.13"
+        versionCode 36
+        versionName "v1.7.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
