@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.Vibrator
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -25,12 +24,15 @@ import app.olaunchercf.data.AppModel
 import app.olaunchercf.data.Constants.Action
 import app.olaunchercf.data.Constants.AppDrawerFlag
 import app.olaunchercf.data.Constants.DateMode
+import app.olaunchercf.data.Constants.Language
+import app.olaunchercf.data.Constants.value
 import app.olaunchercf.data.Prefs
 import app.olaunchercf.databinding.FragmentHomeBinding
 import app.olaunchercf.helper.*
 import app.olaunchercf.listener.OnSwipeTouchListener
 import app.olaunchercf.listener.ViewSwipeTouchListener
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 
 class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener {
@@ -38,7 +40,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
     private lateinit var deviceManager: DevicePolicyManager
-    private lateinit var vibrator: Vibrator
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -78,7 +79,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         } ?: throw Exception("Invalid Activity")
 
         deviceManager = context?.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        vibrator = context?.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
         initObservers()
 
@@ -201,9 +201,14 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     }
 
     private fun renderDateText(mode: DateMode) {
+        val locale = if (prefs.language == Language.System) {
+            Locale.getDefault()
+        } else {
+            Locale.forLanguageTag(prefs.language.value())
+        }
         binding.date.text = when (mode) {
-            DateMode.AD -> NepaliDate.formatAd()
-            DateMode.BS -> NepaliDate.format()
+            DateMode.AD -> NepaliDate.formatAd(locale = locale)
+            DateMode.BS -> NepaliDate.format(locale = locale)
             DateMode.Off -> ""
         }
     }
