@@ -63,6 +63,7 @@ object Constants {
         Japanese,
         Korean,
         Lithuanian,
+        Nepali,
         Persian,
         Portuguese,
         Russian,
@@ -89,6 +90,7 @@ object Constants {
                 Japanese -> "日本"
                 Korean -> "한국어"
                 Lithuanian -> "Lietuvių"
+                Nepali -> "नेपाली"
                 Persian -> "فارسی"
                 Portuguese -> "Português"
                 Russian -> "Русский"
@@ -118,6 +120,7 @@ object Constants {
             Language.Japanese -> "ja"
             Language.Korean -> "ko"
             Language.Lithuanian -> "lt"
+            Language.Nepali -> "ne"
             Language.Persian -> "fa"
             Language.Portuguese -> "pt"
             Language.Russian -> "ru"

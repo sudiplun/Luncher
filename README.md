@@ -7,7 +7,8 @@
 
 ## Features
 
-- **Home screen date modes (`AD` / `BS` / `Off`):** Supports Nepali Bikram Sambat (`BS`) dates (in English or Devanagari when the device language is Nepali), Gregorian (`AD`) dates, or hiding the date (`Off`).
+- **Home screen date modes (`AD` / `BS` / `Off`):** Supports Nepali Bikram Sambat (`BS`) dates (in English or Devanagari when the app or device language is Nepali), Gregorian (`AD`) dates, or hiding the date (`Off`).
+- **Nepali interface language (`नेपाली`):** Select **नेपाली** in **Settings → Appearance → Interface Language** for Nepali UI translations and Devanagari home screen dates.
 - **Smaller APK:** Reduced the release APK from 1.61 MiB to 429 KB (about 74%) by filtering unused locales, removing unused UI dependencies, and excluding packaging metadata.
 - **Gestures & shortcuts:** Configurable swipe up/down/left/right, double tap, and clock/date tap actions (open app, lock screen, notification drawer, quick settings, app list, or recents).
 - **Customizable layout:** Independent alignment for clock/date, home apps, and app drawer, adjustable text size, app renaming, and hidden apps.
